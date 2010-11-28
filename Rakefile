@@ -15,14 +15,17 @@ Jeweler::Tasks.new do |gem|
   gem.name = "textile2html"
   gem.homepage = "http://github.com/akm/textile2html"
   gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
-  gem.description = %Q{TODO: longer description of your gem}
+  gem.summary = %Q{textile2html generate html from textile}
+  gem.description = %Q{textile2html generate html from textile with ERB template by using RedCloth}
   gem.email = "akm2000@gmail.com"
   gem.authors = ["akimatter"]
+
   # Include your dependencies below. Runtime dependencies are required when using your gem,
   # and development dependencies are only needed for development (ie running rake tasks, tests, etc)
   #  gem.add_runtime_dependency 'jabber4r', '> 0.1'
   #  gem.add_development_dependency 'rspec', '> 1.2.3'
+
+  gem.add_runtime_dependency 'RedCloth' # , '>= 4.2.3'
 end
 Jeweler::RubygemsDotOrgTasks.new
 
