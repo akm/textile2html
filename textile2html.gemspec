@@ -10,8 +10,10 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["akimatter"]
   s.date = %q{2010-11-28}
+  s.default_executable = %q{textile2html}
   s.description = %q{textile2html generate html from textile with ERB template by using RedCloth}
   s.email = %q{akm2000@gmail.com}
+  s.executables = ["textile2html"]
   s.extra_rdoc_files = [
     "LICENSE.txt",
     "README.rdoc"
@@ -24,9 +26,11 @@ Gem::Specification.new do |s|
     "README.rdoc",
     "Rakefile",
     "VERSION",
+    "bin/textile2html",
     "lib/textile2html.rb",
     "spec/spec_helper.rb",
-    "spec/textile2html_spec.rb"
+    "spec/textile2html_spec.rb",
+    "textile2html.gemspec"
   ]
   s.homepage = %q{http://github.com/akm/textile2html}
   s.licenses = ["MIT"]
