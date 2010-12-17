@@ -60,7 +60,7 @@ class Textile2Html
 
       erb = ERB.new(File.read(options[:layout]))
       html = erb.result(b)
-      rel_path = src_file.sub("#{Regexp.escape(src_dir)}/", '')
+      rel_path = src_file.sub(/^#{Regexp.escape(src_dir)}\//, '')
       dest_rel_path = rel_path.sub(/\.textile$/, '.html')
       dest_path = File.expand_path(dest_rel_path, options[:dest_dir])
       dest_dir = File.dirname(dest_path)
