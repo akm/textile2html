@@ -39,34 +39,96 @@ class Textile2Html
     RedCloth.new(src).to_html
   end
 
+  EXTENSIONS = {
+    :textile => %w[textile],
+    :html_template => %w[html.erb],
+    :css_template => %w[css.erb],
+    :text => %w[html css],
+    :image => %w[png jpg gif icon],
+  }
+  EXTENSION_PATTERNS = EXTENSIONS.inject({}) do |dest, (t, exts)|
+    key = Regexp.union( exts.map{|ext| /\.#{Regexp.escape(ext)}\Z/i} )
+    dest[key] = t
+    dest
+  end
+
   def execute
-    src_dir = File.expand_path(options[:src_dir])
-    src_files = Dir["#{src_dir}/**/*.textile"]
+    @layout_erb = ERB.new(File.read(options[:layout]))
+    @src_dir = File.expand_path(options[:src_dir])
+    src_files = Dir["#{@src_dir}/**/*.*"]
     src_files.each do |src_file|
-      src = File.read(src_file)
-      html_body = RedCloth.new(src).to_html
-
-      html_body, links = pickup_headers(html_body)
-
-      b = binding_for_yield do|*args|
-        arg = args.first
-        case arg
-        when nil then html_body
-        when :page_outline then build_page_outlines(links)
-        else
-          nil
+      EXTENSION_PATTERNS.each do |pattern, ext_type|
+        if src_file =~ pattern
+          @src_path = src_file
+          @rel_path = src_file.sub(/^#{Regexp.escape(@src_dir)}\//, '')
+          @rel_path_depth = @rel_path.split(/\//).length - 1
+          puts "processing: #{src_file}"
+          send("process_#{ext_type}", src_file)
+          break
         end
       end
-
-      erb = ERB.new(File.read(options[:layout]))
-      html = erb.result(b)
-      rel_path = src_file.sub(/^#{Regexp.escape(src_dir)}\//, '')
-      dest_rel_path = rel_path.sub(/\.textile$/, '.html')
-      dest_path = File.expand_path(dest_rel_path, options[:dest_dir])
-      dest_dir = File.dirname(dest_path)
-      FileUtils.mkdir_p(dest_dir)
-      File.open(dest_path, "w"){|f| f.puts(html)}
     end
   end
+
+  def process_textile(src_file)
+    src = ERB.new(File.read(src_file)).result
+    html_body = RedCloth.new(src).to_html
+    html_body, links = pickup_headers(html_body)
+    b = binding_for_yield do|*args|
+      arg = args.first
+      case arg
+      when nil then html_body
+      when :page_outline then build_page_outlines(links)
+      else
+        nil
+      end
+    end
+    html = @layout_erb.result(b)
+    write_text(src_file, html, [/\.textile$/, '.html'])
+  end
+
+  def process_html_template(src_file)
+    html_body = ERB.new(File.read(src_file)).result
+    b = binding_for_yield{|*args| html_body}
+    html = @layout_erb.result(b)
+    write_text(src_file, html, [/\.erb$/i, ''])
+  end
+
+  def process_css_template(src_file)
+    body = ERB.new(File.read(src_file)).result
+    write_text(src_file, body, [/\.erb$/i, ''])
+  end
+
+  def process_text(src_file)
+    copy(src_file)
+  end
+
+  def process_image(src_file)
+    copy(src_file)
+  end
+
+  private
+
+  def copy(src_file, path_sub_args = [])
+    dest_path = dest_path(src_file, path_sub_args)
+    dest_dir = File.dirname(dest_path)
+    FileUtils.mkdir_p(dest_dir)
+    FileUtils.cp(src_file, dest_path)
+  end
+
+  def write_text(src_file, text, path_sub_args)
+    dest_path = dest_path(src_file, path_sub_args)
+    dest_dir = File.dirname(dest_path)
+    FileUtils.mkdir_p(dest_dir)
+    File.open(dest_path, "w"){|f| f.puts(text)}
+  end
+
+  def dest_path(src_file, path_sub_args)
+    dest_rel_path = path_sub_args.empty? ?
+      @rel_path :
+      @rel_path.sub(*path_sub_args)
+    File.expand_path(dest_rel_path, options[:dest_dir])
+  end
+
 
 end
